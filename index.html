@@ -42,6 +42,7 @@ input {
   margin: 8px 0 16px;
   border-radius: 12px;
   border: 1px solid #ccc;
+  box-sizing: border-box;
 }
 
 .break-buttons {
@@ -91,6 +92,7 @@ button.main {
   border: none;
   border-radius: 14px;
   font-size: 16px;
+  cursor: pointer;
 }
 
 .result {
@@ -99,11 +101,6 @@ button.main {
   padding: 15px;
   border-radius: 14px;
   line-height: 1.8;
-}
-
-.small {
-  font-size: 13px;
-  color: #666;
 }
 
 .thanks {
@@ -149,7 +146,7 @@ button.main {
 <label>時給（円）</label>
 <input type="number" id="wage">
 
-<button class="main" onclick="calculate()">計算する</button>
+<button type="button" class="main" onclick="calculate()">計算する</button>
 
 <div id="result" class="result"></div>
 
@@ -192,8 +189,8 @@ function calculate() {
 
   const workMinutes = totalMinutes - breakMin;
 
-  const base = 455;
-  const legal = 480;
+  const base = 455;  // 7時間35分
+  const legal = 480; // 8時間
 
   let normal = 0;
   let premium = 0;
@@ -206,6 +203,8 @@ function calculate() {
       premium = workMinutes - legal;
     }
   }
+
+  /* ===== 休憩警告（最終ロジック） ===== */
 
   if (workMinutes > 480 && breakMin < 60) {
     warning.innerHTML = "実労働8時間超です。休憩60分以上が必要です。";
