@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>楽Luck 残業計算アプリ</title>
 
-<!-- 丸いフォント -->
 <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
 
 <style>
@@ -16,7 +15,7 @@ body {
 }
 
 .box {
-  max-width: 400px;
+  max-width: 480px;
   margin: auto;
   background: white;
   padding: 25px;
@@ -38,6 +37,15 @@ h2 {
   margin-bottom: 20px;
 }
 
+.explain {
+  background: #eef6f1;
+  padding: 15px;
+  border-radius: 15px;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
 label {
   font-weight: bold;
   display: block;
@@ -54,19 +62,37 @@ input {
   box-sizing: border-box;
 }
 
-button {
+/* 休憩ボタン */
+.break-buttons {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.break-buttons button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid #6bbf8f;
+  background: white;
+  color: #6bbf8f;
+  cursor: pointer;
+}
+
+.break-buttons button.active {
+  background: #6bbf8f;
+  color: white;
+}
+
+.main-btn {
   width: 100%;
   padding: 14px;
   font-size: 16px;
-  background: #6bbf8f;   /* やさしいグリーン */
+  background: #6bbf8f;
   color: white;
   border: none;
   border-radius: 16px;
   cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.9;
 }
 
 .result {
@@ -74,7 +100,7 @@ button:hover {
   padding: 18px;
   background: #e8f5ec;
   border-radius: 16px;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .thanks {
@@ -96,22 +122,45 @@ button:hover {
 
 <h2>残業計算</h2>
 
+<div class="explain">
+楽Luckのコース給は実労働7時間35分をまかなうものです。<br>
+それを超えた分を計算します。<br><br>
+8時間まで → 通常残業<br>
+8時間超 → 割増残業
+</div>
+
 <label>始業時間</label>
 <input type="time" id="start" value="08:40">
 
 <label>退勤時間</label>
 <input type="time" id="end">
 
+<label>休憩時間</label>
+<div class="break-buttons">
+  <button type="button" onclick="setBreak(45)" id="btn45" class="active">45分</button>
+  <button type="button" onclick="setBreak(60)" id="btn60">60分</button>
+</div>
+
 <label>時給（円）</label>
 <input type="number" id="wage" placeholder="例：1100">
 
-<button onclick="calculate()">計算する</button>
+<button class="main-btn" onclick="calculate()">計算する</button>
 
 <div class="result" id="result"></div>
 
 </div>
 
 <script>
+
+var breakMin = 45;
+
+function setBreak(min) {
+  breakMin = min;
+  document.getElementById("btn45").classList.remove("active");
+  document.getElementById("btn60").classList.remove("active");
+  document.getElementById("btn" + min).classList.add("active");
+}
+
 function calculate() {
 
   var startInput = document.getElementById("start").value;
@@ -119,41 +168,40 @@ function calculate() {
   var wage = parseFloat(document.getElementById("wage").value);
 
   if (!endInput || !wage) {
-    document.getElementById("result").innerHTML = "退勤時間と時給を入力してください。";
+    document.getElementById("result").innerHTML = "すべて入力してください。";
     return;
   }
 
   var start = new Date("1970-01-01T" + startInput);
   var end = new Date("1970-01-01T" + endInput);
 
-  var totalHours = (end - start) / 3600000;
+  var totalMinutes = (end - start) / 60000;
 
-  if (totalHours <= 0) {
+  if (totalMinutes <= 0) {
     document.getElementById("result").innerHTML = "退勤時間が正しくありません。";
     return;
   }
 
-  // 17:26以降は60分、それ以前は45分
-  var breakTime =
-    (end.getHours() > 17 ||
-    (end.getHours() === 17 && end.getMinutes() >= 26))
-    ? 1
-    : 0.75;
+  var workMinutes = totalMinutes - breakMin;
 
-  var workHours = totalHours - breakTime;
+  var baseMinutes = 7 * 60 + 35;
+  var normalOTMin = Math.max(0, Math.min(workMinutes, 480) - baseMinutes);
+  var premiumOTMin = Math.max(0, workMinutes - 480);
 
-  var baseHours = 7 + 35/60; // 7時間35分
-  var normalOT = Math.max(0, Math.min(workHours, 8) - baseHours);
-  var premiumOT = Math.max(0, workHours - 8);
-
-  var normalPay = normalOT * wage;
-  var premiumPay = premiumOT * wage * 1.25;
+  var normalPay = (normalOTMin / 60) * wage;
+  var premiumPay = (premiumOTMin / 60) * wage * 1.25;
   var totalPay = normalPay + premiumPay;
 
+  function formatHM(min) {
+    var h = Math.floor(min / 60);
+    var m = Math.round(min % 60);
+    return h + "時間" + m + "分";
+  }
+
   document.getElementById("result").innerHTML =
-    "実労働時間：" + workHours.toFixed(2) + "時間<br>" +
-    "通常残業：" + normalOT.toFixed(2) + "時間<br>" +
-    "割増残業：" + premiumOT.toFixed(2) + "時間<br>" +
+    "実労働時間：" + formatHM(workMinutes) + "<br>" +
+    "通常残業：" + formatHM(normalOTMin) + "<br>" +
+    "割増残業：" + formatHM(premiumOTMin) + "<br>" +
     "<strong>残業代合計：" + Math.round(totalPay) + "円</strong>" +
     "<div class='thanks'>今日もお疲れ様でした(^^)</div>";
 }
