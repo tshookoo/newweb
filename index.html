@@ -218,20 +218,18 @@ function calculate() {
     }
   }
 
-  // ⚠ 休憩注意表示
-  if (breakMinutes === 0) {
-    warningBox.innerHTML = "休憩0分になっています。労働基準法では6時間超で45分、8時間超で60分の休憩が必要です。";
-    warningBox.classList.add("red");
-    warningBox.style.display = "block";
-  } else if (workMinutes > 480 && breakMinutes < 60) {
-    warningBox.innerHTML = "実労働8時間を超えています。休憩は60分以上必要です。";
-    warningBox.classList.add("red");
-    warningBox.style.display = "block";
-  } else if (workMinutes > 360 && breakMinutes < 45) {
-    warningBox.innerHTML = "実労働6時間を超えています。休憩は45分以上必要です。";
-    warningBox.classList.add("yellow");
-    warningBox.style.display = "block";
-  }
+/* ===== 休憩警告（修正版） ===== */
+
+if (workMinutes > 480 && breakMin < 60) {
+  warning.innerHTML = "実労働8時間超です。休憩60分以上が必要です。";
+  warning.classList.add("red");
+  warning.style.display = "block";
+} 
+else if (workMinutes > 360 && breakMin < 45) {
+  warning.innerHTML = "実労働6時間超です。休憩45分以上が必要です。";
+  warning.classList.add("yellow");
+  warning.style.display = "block";
+}
 
   var normalPay = (normalOTMin / 60) * wage;
   var premiumPay = (premiumOTMin / 60) * wage * 1.25;
