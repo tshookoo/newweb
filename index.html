@@ -8,108 +8,105 @@
 <link href="https://fonts.googleapis.com/css2?family=Kosugi+Maru&display=swap" rel="stylesheet">
 
 <style>
-body {
-  font-family: 'Kosugi Maru', sans-serif;
-  padding: 20px;
-  background: #f4f7f5;
+body{
+  font-family:'Kosugi Maru',sans-serif;
+  padding:20px;
+  background:#f4f7f5;
+}
+.box{
+  max-width:520px;
+  margin:auto;
+  background:#fff;
+  padding:25px;
+  border-radius:20px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+h2{text-align:center;}
+
+.explain{
+  background:#eef6f1;
+  padding:15px;
+  border-radius:12px;
+  font-size:14px;
+  margin-bottom:20px;
+  line-height:1.6;
 }
 
-.box {
-  max-width: 520px;
-  margin: auto;
-  background: white;
-  padding: 25px;
-  border-radius: 20px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+label{font-weight:bold;}
+
+input{
+  width:100%;
+  padding:10px;
+  margin:8px 0 16px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  box-sizing:border-box;
 }
 
-h2 { text-align: center; }
-
-.explain {
-  background: #eef6f1;
-  padding: 15px;
-  border-radius: 12px;
-  font-size: 14px;
-  margin-bottom: 20px;
-  line-height: 1.6;
+.break-buttons{
+  display:flex;
+  gap:10px;
+  margin-bottom:10px;
 }
 
-label { font-weight: bold; }
-
-input {
-  width: 100%;
-  padding: 10px;
-  margin: 8px 0 16px;
-  border-radius: 12px;
-  border: 1px solid #ccc;
-  box-sizing: border-box;
+.break-buttons button{
+  flex:1;
+  padding:10px;
+  border-radius:12px;
+  border:1px solid #6bbf8f;
+  background:#fff;
+  color:#6bbf8f;
+  cursor:pointer;
 }
 
-.break-buttons {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
+.break-buttons button.active{
+  background:#6bbf8f;
+  color:#fff;
 }
 
-.break-buttons button {
-  flex: 1;
-  padding: 10px;
-  border-radius: 12px;
-  border: 1px solid #6bbf8f;
-  background: white;
-  color: #6bbf8f;
-  cursor: pointer;
+.warning{
+  display:none;
+  padding:10px;
+  border-radius:10px;
+  margin-bottom:15px;
+  font-size:13px;
 }
 
-.break-buttons button.active {
-  background: #6bbf8f;
-  color: white;
+.warning.yellow{
+  background:#fff6cc;
+  color:#a67c00;
 }
 
-.warning {
-  display: none;
-  padding: 10px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  font-size: 13px;
+.warning.red{
+  background:#ffd6d6;
+  color:#c40000;
 }
 
-.warning.yellow {
-  background: #fff6cc;
-  color: #a67c00;
+button.main{
+  width:100%;
+  padding:12px;
+  background:#6bbf8f;
+  color:#fff;
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  cursor:pointer;
 }
 
-.warning.red {
-  background: #ffd6d6;
-  color: #c40000;
+.result{
+  margin-top:20px;
+  background:#e8f5ec;
+  padding:15px;
+  border-radius:14px;
+  line-height:1.8;
 }
 
-button.main {
-  width: 100%;
-  padding: 12px;
-  background: #6bbf8f;
-  color: white;
-  border: none;
-  border-radius: 14px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-.result {
-  margin-top: 20px;
-  background: #e8f5ec;
-  padding: 15px;
-  border-radius: 14px;
-  line-height: 1.8;
-}
-
-.thanks {
-  margin-top: 10px;
-  text-align: center;
+.thanks{
+  margin-top:10px;
+  text-align:center;
 }
 </style>
 </head>
-
 <body>
 
 <div class="box">
@@ -121,7 +118,6 @@ button.main {
 楽Luckのコース給は<br>
 始業8:40／退勤17:00／休憩45分<br>
 実労働最大7時間35分をまかなうものです。<br><br>
-
 実労働7時間35分を超えた分を計算します。<br>
 実労働8時間まで＝通常残業（法定内）<br>
 実労働8時間超＝割増残業（法定外）
@@ -139,7 +135,7 @@ button.main {
   <button type="button" id="btn60" onclick="setBreak(60)">60分</button>
 </div>
 
-<input type="number" id="customBreak" placeholder="任意入力（例：30分 / 0分）">
+<input type="number" id="customBreak" placeholder="任意入力（例：30 / 0）">
 
 <div id="warning" class="warning"></div>
 
@@ -156,47 +152,53 @@ button.main {
 
 let selectedBreak = 45;
 
-function setBreak(min) {
+function setBreak(min){
   selectedBreak = min;
   document.getElementById("customBreak").value = "";
   document.getElementById("btn45").classList.remove("active");
   document.getElementById("btn60").classList.remove("active");
-  document.getElementById("btn" + min).classList.add("active");
+  document.getElementById("btn"+min).classList.add("active");
 }
 
-function calculate() {
+function calculate(){
 
+  const resultBox = document.getElementById("result");
   const warning = document.getElementById("warning");
   warning.style.display = "none";
   warning.className = "warning";
 
   const startVal = document.getElementById("start").value;
-  const endVal = document.getElementById("end").value;
-  const wage = parseFloat(document.getElementById("wage").value);
+  const endVal   = document.getElementById("end").value;
+  const wage     = parseFloat(document.getElementById("wage").value);
 
-  if (!startVal || !endVal || !wage) {
-    document.getElementById("result").innerHTML = "入力不足です。";
+  if(!startVal || !endVal || isNaN(wage)){
+    resultBox.innerHTML = "入力不足です。";
     return;
   }
 
-  const start = new Date("1970-01-01T" + startVal);
-  const end = new Date("1970-01-01T" + endVal);
+  const start = new Date("1970-01-01T"+startVal);
+  const end   = new Date("1970-01-01T"+endVal);
 
   const totalMinutes = (end - start) / 60000;
+
+  if(isNaN(totalMinutes) || totalMinutes <= 0){
+    resultBox.innerHTML = "退勤時間を確認してください。";
+    return;
+  }
 
   const custom = parseFloat(document.getElementById("customBreak").value);
   const breakMin = isNaN(custom) ? selectedBreak : custom;
 
   const workMinutes = totalMinutes - breakMin;
 
-  const base = 455;  // 7時間35分
+  const base  = 455; // 7時間35分
   const legal = 480; // 8時間
 
   let normal = 0;
   let premium = 0;
 
-  if (workMinutes > base) {
-    if (workMinutes <= legal) {
+  if(workMinutes > base){
+    if(workMinutes <= legal){
       normal = workMinutes - base;
     } else {
       normal = legal - base;
@@ -204,14 +206,14 @@ function calculate() {
     }
   }
 
-  /* ===== 休憩警告（最終ロジック） ===== */
+  /* 休憩警告 */
 
-  if (workMinutes > 480 && breakMin < 60) {
+  if(workMinutes > 480 && breakMin < 60){
     warning.innerHTML = "実労働8時間超です。休憩60分以上が必要です。";
     warning.classList.add("red");
     warning.style.display = "block";
-  } 
-  else if (workMinutes > 360 && breakMin < 45) {
+  }
+  else if(workMinutes > 360 && breakMin < 45){
     warning.innerHTML = "実労働6時間超です。休憩45分以上が必要です。";
     warning.classList.add("yellow");
     warning.style.display = "block";
@@ -220,7 +222,7 @@ function calculate() {
   function formatHM(min){
     const h = Math.floor(min/60);
     const m = Math.round(min%60);
-    return h+"時間"+m+"分";
+    return h + "時間" + m + "分";
   }
 
   function formatDecimal(min){
@@ -229,19 +231,14 @@ function calculate() {
 
   const pay = (normal/60)*wage + (premium/60)*wage*1.25;
 
-  document.getElementById("result").innerHTML =
-    "実労働時間：<strong>" + formatHM(workMinutes) +
-    "</strong>（" + formatDecimal(workMinutes) + "時間）<br>" +
-
-    "通常残業：<strong>" + formatHM(normal) +
-    "</strong>（" + formatDecimal(normal) + "時間）<br>" +
-
-    "割増残業：<strong>" + formatHM(premium) +
-    "</strong>（" + formatDecimal(premium) + "時間）<br><br>" +
-
-    "<strong>残業代合計：" + Math.round(pay) + "円</strong>" +
+  resultBox.innerHTML =
+    "実労働時間：<strong>"+formatHM(workMinutes)+"</strong>（"+formatDecimal(workMinutes)+"時間）<br>"+
+    "通常残業：<strong>"+formatHM(normal)+"</strong>（"+formatDecimal(normal)+"時間）<br>"+
+    "割増残業：<strong>"+formatHM(premium)+"</strong>（"+formatDecimal(premium)+"時間）<br><br>"+
+    "<strong>残業代合計："+Math.round(pay)+"円</strong>"+
     "<div class='thanks'>今日もお疲れ様でした(^^)</div>";
 }
+
 </script>
 
 </body>
