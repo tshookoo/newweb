@@ -15,7 +15,7 @@ body {
 }
 
 .box {
-  max-width: 480px;
+  max-width: 520px;
   margin: auto;
   background: white;
   padding: 25px;
@@ -23,19 +23,10 @@ body {
   box-shadow: 0 6px 18px rgba(0,0,0,0.08);
 }
 
-.logo {
-  text-align: center;
-  margin-bottom: 15px;
-}
+.logo { text-align: center; margin-bottom: 15px; }
+.logo img { max-width: 170px; }
 
-.logo img {
-  max-width: 170px;
-}
-
-h2 {
-  text-align: center;
-  margin-bottom: 20px;
-}
+h2 { text-align: center; margin-bottom: 15px; }
 
 .explain {
   background: #eef6f1;
@@ -46,11 +37,7 @@ h2 {
   margin-bottom: 20px;
 }
 
-label {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 6px;
-}
+label { font-weight: bold; display: block; margin-bottom: 6px; }
 
 input {
   width: 100%;
@@ -62,11 +49,10 @@ input {
   box-sizing: border-box;
 }
 
-/* 休憩ボタン */
 .break-buttons {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 }
 
 .break-buttons button {
@@ -82,6 +68,24 @@ input {
 .break-buttons button.active {
   background: #6bbf8f;
   color: white;
+}
+
+.warning {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  font-size: 13px;
+  display: none;
+}
+
+.warning.yellow {
+  background: #fff8e1;
+  color: #a67c00;
+}
+
+.warning.red {
+  background: #ffe5e5;
+  color: #c40000;
 }
 
 .main-btn {
@@ -123,9 +127,14 @@ input {
 <h2>残業計算</h2>
 
 <div class="explain">
-楽Luckのコース給は実労働7時間35分をまかなうものです。それを超えた分を計算します。<br><br>
-8時間まで → 通常残業（法定時間内残業）<br>
-8時間超 → 割増残業（法定時間外残業）
+<strong>【前提】</strong><br>
+楽Luckのコース給は<br>
+始業8:40／退勤17:00／休憩45分<br>
+実労働最大7時間35分をまかなうものです。<br><br>
+ここでは、実労働7時間35分を超えた分の残業代を計算します。<br><br>
+
+実労働8時間まで → 通常残業（法定時間内）<br>
+実労働8時間超 → 割増残業（法定時間外）
 </div>
 
 <label>始業時間</label>
@@ -140,6 +149,10 @@ input {
   <button type="button" onclick="setBreak(60)" id="btn60">60分</button>
 </div>
 
+<input type="number" id="customBreak" placeholder="任意入力（例：30分 / 0分）" oninput="clearButtonSelection()">
+
+<div id="warning" class="warning"></div>
+
 <label>時給（円）</label>
 <input type="number" id="wage" placeholder="例：1100">
 
@@ -151,16 +164,26 @@ input {
 
 <script>
 
-var breakMin = 45;
+var selectedBreak = 45;
 
 function setBreak(min) {
-  breakMin = min;
+  selectedBreak = min;
+  document.getElementById("customBreak").value = "";
   document.getElementById("btn45").classList.remove("active");
   document.getElementById("btn60").classList.remove("active");
   document.getElementById("btn" + min).classList.add("active");
 }
 
+function clearButtonSelection() {
+  document.getElementById("btn45").classList.remove("active");
+  document.getElementById("btn60").classList.remove("active");
+}
+
 function calculate() {
+
+  var warningBox = document.getElementById("warning");
+  warningBox.style.display = "none";
+  warningBox.className = "warning";
 
   var startInput = document.getElementById("start").value;
   var endInput = document.getElementById("end").value;
@@ -173,19 +196,42 @@ function calculate() {
 
   var start = new Date("1970-01-01T" + startInput);
   var end = new Date("1970-01-01T" + endInput);
-
   var totalMinutes = (end - start) / 60000;
 
-  if (totalMinutes <= 0) {
-    document.getElementById("result").innerHTML = "退勤時間が正しくありません。";
-    return;
+  var customBreak = parseFloat(document.getElementById("customBreak").value);
+  var breakMinutes = isNaN(customBreak) ? selectedBreak : customBreak;
+
+  var workMinutes = totalMinutes - breakMinutes;
+
+  var baseMinutes = 455;
+  var legalLimit = 480;
+
+  var normalOTMin = 0;
+  var premiumOTMin = 0;
+
+  if (workMinutes > baseMinutes) {
+    if (workMinutes <= legalLimit) {
+      normalOTMin = workMinutes - baseMinutes;
+    } else {
+      normalOTMin = legalLimit - baseMinutes;
+      premiumOTMin = workMinutes - legalLimit;
+    }
   }
 
-  var workMinutes = totalMinutes - breakMin;
-
-  var baseMinutes = 7 * 60 + 35;
-  var normalOTMin = Math.max(0, Math.min(workMinutes, 480) - baseMinutes);
-  var premiumOTMin = Math.max(0, workMinutes - 480);
+  // ⚠ 休憩注意表示
+  if (breakMinutes === 0) {
+    warningBox.innerHTML = "休憩0分になっています。労働基準法では6時間超で45分、8時間超で60分の休憩が必要です。";
+    warningBox.classList.add("red");
+    warningBox.style.display = "block";
+  } else if (workMinutes > 480 && breakMinutes < 60) {
+    warningBox.innerHTML = "実労働8時間を超えています。休憩は60分以上必要です。";
+    warningBox.classList.add("red");
+    warningBox.style.display = "block";
+  } else if (workMinutes > 360 && breakMinutes < 45) {
+    warningBox.innerHTML = "実労働6時間を超えています。休憩は45分以上必要です。";
+    warningBox.classList.add("yellow");
+    warningBox.style.display = "block";
+  }
 
   var normalPay = (normalOTMin / 60) * wage;
   var premiumPay = (premiumOTMin / 60) * wage * 1.25;
